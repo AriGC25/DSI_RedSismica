@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.SuccessDialogController">
+    <children>
+        <VBox alignment="CENTER" spacing="15.0" style="-fx-background-color: #d4edda; -fx-border-color: #28a745; -fx-border-radius: 10; -fx-background-radius: 10;">
+            <children>
+                <Label text="✓ OPERACIÓN EXITOSA" style="-fx-font-weight: bold; -fx-font-size: 20px;" textFill="#155724" />
+                <Separator prefWidth="300.0" />
+                <Label fx:id="lblMensajeExito" text="La orden ha sido cerrada exitosamente" style="-fx-font-size: 16px;" textFill="#155724" wrapText="true" />
+
+                <VBox fx:id="detallesContainer" spacing="10.0" style="-fx-background-color: white; -fx-border-color: #28a745; -fx-border-radius: 5; -fx-background-radius: 5;">
+                    <children>
+                        <Label text="DETALLES DE LA OPERACIÓN:" style="-fx-font-weight: bold; -fx-font-size: 14px;" textFill="#155724" />
+                        <VBox fx:id="detallesOperacion" spacing="5.0" />
+                    </children>
+                    <padding>
+                        <Insets bottom="10.0" left="15.0" right="15.0" top="10.0" />
+                    </padding>
+                </VBox>
+
+                <Label text="Notificaciones enviadas por correo electrónico" style="-fx-font-style: italic; -fx-font-size: 12px;" textFill="#6c757d" />
+
+                <HBox alignment="CENTER" spacing="15.0">
+                    <children>
+                        <Button fx:id="btnAceptar" mnemonicParsing="false" onAction="#handleAceptar" style="-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;" text="Aceptar" />
+                        <Button fx:id="btnNuevaOperacion" mnemonicParsing="false" onAction="#handleNuevaOperacion" style="-fx-background-color: #007bff; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;" text="Nueva Operación" />
+                    </children>
+                </HBox>
+            </children>
+            <padding>
+                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+            </padding>
+        </VBox>
+    </children>
+</VBox>
