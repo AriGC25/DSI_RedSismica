@@ -81,21 +81,19 @@
                     <VBox spacing="10.0" style="-fx-background-color: white; -fx-border-color: #bdc3c7; -fx-border-radius: 5; -fx-background-radius: 5;">
                         <children>
                             <Label text="MOTIVO PARA FUERA DE SERVICIO" style="-fx-font-weight: bold; -fx-font-size: 16px;" textFill="#2c3e50" />
-                            <Label text="Seleccione el motivo que causará que el sismógrafo quede fuera de servicio:" textFill="#7f8c8d" />
+                            <Label text="Seleccione uno o más motivos que causarán que el sismógrafo quede fuera de servicio:" textFill="#7f8c8d" />
                             <VBox fx:id="motivosContainer" spacing="5.0">
                                 <children>
-                                    <RadioButton fx:id="rbFallaHardware" mnemonicParsing="false" text="1. Falla de hardware" />
-                                    <RadioButton fx:id="rbFallaSoftware" mnemonicParsing="false" text="2. Falla de software" />
-                                    <RadioButton fx:id="rbMantenimientoPreventivo" mnemonicParsing="false" text="3. Mantenimiento preventivo" />
-                                    <RadioButton fx:id="rbCalibracionNecesaria" mnemonicParsing="false" text="4. Calibración necesaria" />
-                                    <RadioButton fx:id="rbDanoExterno" mnemonicParsing="false" text="5. Daño por factores externos" />
-                                    <RadioButton fx:id="rbInterferenciaElectromagnetica" mnemonicParsing="false" text="6. Interferencia electromagnética" />
-                                    <RadioButton fx:id="rbProblemasConectividad" mnemonicParsing="false" text="7. Problemas de conectividad" />
+                                    <CheckBox fx:id="rbFallaHardware" mnemonicParsing="false" text="1. Falla de hardware" />
+                                    <CheckBox fx:id="rbFallaSoftware" mnemonicParsing="false" text="2. Falla de software" />
+                                    <CheckBox fx:id="rbMantenimientoPreventivo" mnemonicParsing="false" text="3. Mantenimiento preventivo" />
+                                    <CheckBox fx:id="rbCalibracionNecesaria" mnemonicParsing="false" text="4. Calibración necesaria" />
+                                    <CheckBox fx:id="rbDanoExterno" mnemonicParsing="false" text="5. Daño por factores externos" />
+                                    <CheckBox fx:id="rbInterferenciaElectromagnetica" mnemonicParsing="false" text="6. Interferencia electromagnética" />
+                                    <CheckBox fx:id="rbProblemasConectividad" mnemonicParsing="false" text="7. Problemas de conectividad" />
                                 </children>
                             </VBox>
-                            <Label text="Comentario adicional (opcional):" />
-                            <TextArea fx:id="txtComentario" prefRowCount="2" promptText="Ingrese comentarios adicionales..." style="-fx-font-size: 14px;" wrapText="true" />
-                            <Label fx:id="lblErrorMotivo" text="Debe seleccionar un motivo válido." textFill="#e74c3c" visible="false">
+                            <Label fx:id="lblErrorMotivo" text="Debe seleccionar al menos un motivo válido." textFill="#e74c3c" visible="false">
                                 <font>
                                     <Font name="System Bold" size="12.0" />
                                 </font>

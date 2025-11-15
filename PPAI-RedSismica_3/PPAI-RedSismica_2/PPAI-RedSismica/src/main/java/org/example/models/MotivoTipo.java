@@ -36,4 +36,3 @@ public enum MotivoTipo {
         return List.of(values());
     }
 }
-

@@ -1,32 +1,64 @@
-//CONSULTAR CHICAS LOS OTROS METODOS QUE NO USAMOS EN EL DIAGRAMA DE SECUENCIA
 package org.example.models;
 
-import java.text.SimpleDateFormat;
+import jakarta.persistence.*;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
+@Entity
+@Table(name = "sismografos")
 public class Sismografo {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "identificador_sismografo", nullable = false, unique = true)
     private int identificadorSismografo;
+
+    @Column(name = "fecha_adquisicion", length = 50)
     private String fechaAdquisicion;
+
+    @Column(name = "nro_serie")
     private int nroSerie;
+
+    @OneToOne(mappedBy = "sismografo")
     private EstacionSismologica estacion;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado_actual")
     private Estado estadoActual;
+
+    @OneToMany(mappedBy = "sismografo", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<CambioEstado> cambiosEstado;
+
+    public Sismografo() {
+        // Constructor vacío requerido por JPA
+        this.cambiosEstado = new ArrayList<>();
+        this.estadoActual = Estado.OPERATIVO;
+    }
 
     public Sismografo(int identificadorSismografo, String fechaAdquisicion, int nroSerie) {
         this.identificadorSismografo = identificadorSismografo;
         this.nroSerie = nroSerie;
         this.fechaAdquisicion = fechaAdquisicion;
-        this.cambiosEstado = new ArrayList();
+        this.cambiosEstado = new ArrayList<>();
         this.estadoActual = Estado.OPERATIVO;
-        CambioEstado cambioInicial = new CambioEstado((String)null, (String)null, (String)null, (String)null, (Estado)null,(Empleado)null, List.of());
+        CambioEstado cambioInicial = new CambioEstado(null, null, null, null, null, null, List.of());
         cambioInicial.setEstado(this.estadoActual);
+        cambioInicial.setSismografo(this);
         this.cambiosEstado.add(cambioInicial);
     }
 
-    //Métodos GET y SET
+    // Métodos GET y SET
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public int getIdentificadorSismografo() {
         return this.identificadorSismografo;
     }
@@ -88,7 +120,16 @@ public class Sismografo {
         nuevoCambio.setEstado(estadoFS);
         this.cambiosEstado.add(nuevoCambio);
 
-        nuevoCambio.crearMotivoFS(comentarioIngresado);
+        List<MotivoFueraServicio> comMotivos;
+        if (comentarioIngresado == null) {
+            comMotivos = new ArrayList<>();
+        } else {
+            comMotivos = comentarioIngresado.stream()
+                    .map(texto -> new MotivoFueraServicio(texto))
+                    .collect(Collectors.toList());
+        }
+
+        nuevoCambio.crearMotivoFS(comMotivos);
         System.out.println("Motivos fueraseleeccionados: " + motivosSeleccionado);
     }
 }

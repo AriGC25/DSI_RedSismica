@@ -1,17 +1,46 @@
 package org.example.models;
 
-import java.util.Iterator;
+import jakarta.persistence.*;
 import java.util.List;
 
+@Entity
+@Table(name = "ordenes_inspeccion")
 public class OrdenInspeccion {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "numero_orden", nullable = false, unique = true)
     private int numeroOrden;
+
+    @Column(name = "fecha_hora_inicio", length = 50)
     private String fechaHoraInicio;
+
+    @Column(name = "fecha_hora_finalizacion", length = 50)
     private String fechaHoraFinalizacion;
+
+    @Column(name = "fecha_cierre", length = 50)
     private String fechaCierre;
+
+    @Column(name = "observacion_cierre", length = 500)
     private String observacionCierre;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Estado estado;
+
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
+    @JoinColumn(name = "estacion_id", nullable = false)
     private EstacionSismologica estacion;
+
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
+    @JoinColumn(name = "empleado_id", nullable = false)
     private Empleado empleadoResponsable;
+
+    public OrdenInspeccion() {
+        // Constructor vacío requerido por JPA
+    }
 
     public OrdenInspeccion(int numeroOrden, String fechaHoraInicio, String fechaHoraFinalizacion, String fechaCierre, String observacionCierre, EstacionSismologica estacionSismologica, Empleado empleadoResponsable, Estado estado) {
         this.numeroOrden = numeroOrden;
@@ -24,7 +53,15 @@ public class OrdenInspeccion {
         this.estado = estado;
     }
 
-    //Métodos GET y SET
+    // Métodos GET y SET
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public int getNumeroOrden() {
         return numeroOrden;
     }
@@ -125,4 +162,3 @@ public class OrdenInspeccion {
     }
 
 }
-

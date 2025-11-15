@@ -117,6 +117,18 @@
                         </VBox>
                     </VBox>
 
+                    <!-- DISABLED
+                     COMENTARIOS ADICIONALES (AGREGADO)
+                    <VBox spacing="8">
+                        <Label text="COMENTARIOS ADICIONALES:" style="-fx-font-weight: bold; -fx-text-fill: #495057;" />
+                        <VBox spacing="5">
+                            <Label text="Comentarios sobre el cierre (opcional):" style="-fx-text-fill: #6c757d;" />
+                            <TextArea fx:id="txtComentarios" promptText="Ingrese comentarios adicionales..."
+                                      prefRowCount="3" wrapText="true"
+                                      style="-fx-border-color: #ced4da; -fx-border-radius: 4; -fx-background-radius: 4;" />
+                        </VBox>
+                    </VBox> -->
+
                     <!-- MOTIVO DE CIERRE -->
                     <!--<VBox spacing="8">
                         <Label text="MOTIVO DE FINALIZACIÓN:" style="-fx-font-weight: bold; -fx-text-fill: #495057;" />

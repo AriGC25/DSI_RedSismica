@@ -1,16 +1,44 @@
 package org.example.models;
 
+import jakarta.persistence.*;
 import java.util.List;
 
+@Entity
+@Table(name = "estaciones_sismologicas")
 public class EstacionSismologica {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "codigo_estacion", nullable = false, unique = true)
     private int codigoEstacion;
+
+    @Column(name = "documento_certificacion_adq", length = 100)
     private String documentoCertificacionAdq;
+
+    @Column(name = "fecha_solicitud_certificacion", length = 50)
     private String fechaSolicitudCertificacion;
+
+    @Column(length = 50)
     private String latitud;
+
+    @Column(length = 50)
     private String longitud;
+
+    @Column(nullable = false, length = 100)
     private String nombre;
+
+    @Column(name = "nro_certificacion_adquisicion")
     private int nroCeritifacionAdquisicion;
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "sismografo_id", unique = true)
     private Sismografo sismografo;
+
+    public EstacionSismologica() {
+        // Constructor vacío requerido por JPA
+    }
 
     public EstacionSismologica(int codigoEstacion, String documentoCertificacionAdq, String fechaSolicitudCertificacion, String latitud,
                                String longitud, String nombre, int numeroCeritifacionAdquisicion) {
@@ -23,7 +51,15 @@ public class EstacionSismologica {
         this.nroCeritifacionAdquisicion = numeroCeritifacionAdquisicion;
     }
 
-    //Métodos GET y SET
+    // Métodos GET y SET
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public int getCodigoEstacion() {
         return codigoEstacion;
     }

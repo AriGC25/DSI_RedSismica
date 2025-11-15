@@ -1,29 +1,58 @@
 package org.example.Interfaz;
+
+import javafx.application.Platform;
 import javafx.scene.control.Alert;
+import javafx.scene.control.TextArea;
+import java.util.List;
 
-public class InterfazPantalla {
-    private String notificacion;
+public class InterfazPantalla implements IObservador {
+    private String mensaje;
 
-    public InterfazPantalla(String notificacion) {
-        this.notificacion = notificacion;
+    @Override
+    public void actualizar(String identificadorSismografo, String nuevoEstado, String fechaHora, List<String> motivos, String comentarios, List<String> emailsResponsables) {
+        // InterfazPantalla ignora el parámetro emailsResponsables
+        publicarMonitor(identificadorSismografo, nuevoEstado, fechaHora, motivos, comentarios);
     }
 
-    //Métodos GET y SET
-    public String getNotificacion() {
-        return this.notificacion;
+    public void publicarMonitor(String identificadorSismografo, String nuevoEstado, String fechaHora, List<String> motivos, String comentarios){
+        StringBuilder motivosFormateados = new StringBuilder();
+        if (motivos != null && !motivos.isEmpty()) {
+            if (motivos.size() == 1) {
+                motivosFormateados.append(motivos.get(0));
+            } else {
+                motivosFormateados.append("(").append(motivos.size()).append(" motivos):\n");
+                for (String motivo : motivos) {
+                    motivosFormateados.append("  • ").append(motivo).append("\n");
+                }
+            }
+        } else {
+            motivosFormateados.append("No especificado");
+        }
+        setMensaje(identificadorSismografo, nuevoEstado, fechaHora, motivosFormateados, comentarios);
+
     }
 
-    public void setNotificacion(String notificacion) {
-        this.notificacion = notificacion;
-    }
+    public void setMensaje(String identificadorSismografo, String nuevoEstado, String fechaHora, StringBuilder motivosFormateados, String comentarios){
+        String mensaje = "Sismógrafo: " + identificadorSismografo + "\n"
+                + "Nuevo Estado: " + nuevoEstado + "\n"
+                + "Fecha y Hora: " + fechaHora + "\n"
+                + "Motivos: " + motivosFormateados + "\n"
+                + "Comentarios: " + comentarios;
 
-    //Otros métodos de Interfaz Pantalla
-    public void publicar(String nombreEstacion) {
-        System.out.println("Publicando en Monitor: " + nombreEstacion);
-        Alert alertaMonitor = new Alert(Alert.AlertType.INFORMATION);
-        alertaMonitor.setTitle("Publicación en Monitor");
-        alertaMonitor.setHeaderText("Publicación realizada");
-        alertaMonitor.setContentText("Mensaje publicado en " + nombreEstacion);
-        alertaMonitor.showAndWait();
+            // Usar Platform.runLater para asegurar que se ejecuta en el hilo de JavaFX
+            Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Actualización de Sismógrafo");
+            alert.setHeaderText("¡Notificación!");
+
+            // Usar TextArea para el contenido para mejor visualización
+            TextArea textArea = new TextArea(mensaje);
+            textArea.setEditable(false);
+            textArea.setWrapText(true);
+            textArea.setPrefRowCount(10);
+
+            alert.getDialogPane().setContent(textArea);
+            alert.showAndWait();
+        });
     }
 }

@@ -14,6 +14,8 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CerrarOrdenController {
 
@@ -28,15 +30,14 @@ public class CerrarOrdenController {
     @FXML private TextArea txtObservacion;
     @FXML private Label lblErrorObservacion;
 
-    @FXML private RadioButton rbFallaHardware;
-    @FXML private RadioButton rbFallaSoftware;
-    @FXML private RadioButton rbMantenimientoPreventivo;
-    @FXML private RadioButton rbCalibracionNecesaria;
-    @FXML private RadioButton rbDanoExterno;
-    @FXML private RadioButton rbInterferenciaElectromagnetica;
-    @FXML private RadioButton rbProblemasConectividad;
+    @FXML private CheckBox rbFallaHardware;
+    @FXML private CheckBox rbFallaSoftware;
+    @FXML private CheckBox rbMantenimientoPreventivo;
+    @FXML private CheckBox rbCalibracionNecesaria;
+    @FXML private CheckBox rbDanoExterno;
+    @FXML private CheckBox rbInterferenciaElectromagnetica;
+    @FXML private CheckBox rbProblemasConectividad;
 
-    @FXML private TextArea txtComentario;
     @FXML private Label lblErrorMotivo;
 
     @FXML private VBox resumenContainer;
@@ -47,24 +48,27 @@ public class CerrarOrdenController {
     @FXML private Button btnCancelar;
 
     private OrdenInspeccion ordenSeleccionada;
-    private ToggleGroup motivoGroup;
 
     @FXML
     private void initialize() {
-        // Configurar grupo de radio buttons
-        motivoGroup = new ToggleGroup();
-        rbFallaHardware.setToggleGroup(motivoGroup);
-        rbFallaSoftware.setToggleGroup(motivoGroup);
-        rbMantenimientoPreventivo.setToggleGroup(motivoGroup);
-        rbCalibracionNecesaria.setToggleGroup(motivoGroup);
-        rbDanoExterno.setToggleGroup(motivoGroup);
-        rbInterferenciaElectromagnetica.setToggleGroup(motivoGroup);
-        rbProblemasConectividad.setToggleGroup(motivoGroup);
+        // Configurar TextArea de observación
+        if (txtObservacion != null) {
+            txtObservacion.setEditable(true);
+            txtObservacion.setDisable(false);
+            txtObservacion.setWrapText(true);
+            txtObservacion.setStyle("-fx-opacity: 1.0;");
+            System.out.println("Campo txtObservacion configurado correctamente");
+        } else {
+            System.err.println("ERROR: txtObservacion es null!");
+        }
+
 
         // Ocultar mensajes de error inicialmente
         lblErrorObservacion.setVisible(false);
         lblErrorMotivo.setVisible(false);
         resumenContainer.setVisible(false);
+
+        System.out.println("=== INICIALIZACIÓN COMPLETA ===");
     }
 
     public void setOrdenSeleccionada(OrdenInspeccion orden) {
@@ -105,20 +109,20 @@ public class CerrarOrdenController {
             System.out.println("Observación ingresada: " + observacion);
         }
 
-        // Validar motivo seleccionado
-        RadioButton motivoSeleccionado = (RadioButton) motivoGroup.getSelectedToggle();
-        if (motivoSeleccionado == null) {
+        // Validar motivos seleccionados (al menos uno)
+        List<String> motivosSeleccionados = obtenerMotivosSeleccionados();
+        if (motivosSeleccionados.isEmpty()) {
             lblErrorMotivo.setVisible(true);
-            lblErrorMotivo.setText("Debe seleccionar un motivo válido.");
+            lblErrorMotivo.setText("Debe seleccionar al menos un motivo válido.");
             datosValidos = false;
-            System.out.println(">>> ERROR: El motivo seleccionado no es válido");
+            System.out.println(">>> ERROR: No se seleccionó ningún motivo");
         } else {
             lblErrorMotivo.setVisible(false);
-            String tipoMotivo = obtenerTextoMotivo(motivoSeleccionado);
-            String comentario = txtComentario.getText().trim();
 
-            System.out.println("Motivo seleccionado: " + tipoMotivo);
-            System.out.println("Comentario ingresado: " + (comentario.isEmpty() ? "" : comentario));
+            System.out.println("Motivos seleccionados (" + motivosSeleccionados.size() + "):");
+            for (String motivo : motivosSeleccionados) {
+                System.out.println("  - " + motivo);
+            }
         }
 
         if (datosValidos) {
@@ -138,13 +142,25 @@ public class CerrarOrdenController {
         }
     }
 
+    private List<String> obtenerMotivosSeleccionados() {
+        List<String> motivos = new ArrayList<>();
+
+        if (rbFallaHardware.isSelected()) motivos.add("Falla de hardware");
+        if (rbFallaSoftware.isSelected()) motivos.add("Falla de software");
+        if (rbMantenimientoPreventivo.isSelected()) motivos.add("Mantenimiento preventivo");
+        if (rbCalibracionNecesaria.isSelected()) motivos.add("Calibración necesaria");
+        if (rbDanoExterno.isSelected()) motivos.add("Daño por factores externos");
+        if (rbInterferenciaElectromagnetica.isSelected()) motivos.add("Interferencia electromagnética");
+        if (rbProblemasConectividad.isSelected()) motivos.add("Problemas de conectividad");
+
+        return motivos;
+    }
+
     private void mostrarResumen() {
         resumenDetalles.getChildren().clear();
 
-        RadioButton motivoSeleccionado = (RadioButton) motivoGroup.getSelectedToggle();
-        String tipoMotivo = obtenerTextoMotivo(motivoSeleccionado);
+        List<String> motivosSeleccionados = obtenerMotivosSeleccionados();
         String observacion = txtObservacion.getText().trim();
-        String comentario = txtComentario.getText().trim();
 
         System.out.println(">>> PANTALLA: ================================");
         System.out.println(">>> PANTALLA: CONFIRMAR CIERRE DE ORDEN");
@@ -153,20 +169,24 @@ public class CerrarOrdenController {
         System.out.println(">>> PANTALLA: - Orden: #" + ordenSeleccionada.getNumero());
         System.out.println(">>> PANTALLA: - Estación: " + ordenSeleccionada.getEstacion());
         System.out.println(">>> PANTALLA: - Observación: " + observacion);
-        System.out.println(">>> PANTALLA: - Motivo: " + tipoMotivo);
-        System.out.println(">>> PANTALLA: - Comentario: " + comentario);
+        System.out.println(">>> PANTALLA: - Motivos seleccionados (" + motivosSeleccionados.size() + "):");
+        for (String motivo : motivosSeleccionados) {
+            System.out.println(">>> PANTALLA:   * " + motivo);
+        }
         System.out.println(">>> PANTALLA: ================================");
         System.out.println(">>> PANTALLA: ¿Confirma el cierre de la orden? (S/N)");
         System.out.println(">>> PANTALLA: ATENCIÓN: Esta acción marcará el sismógrafo como Fuera de Servicio");
 
         // Agregar labels al resumen
-        resumenDetalles.getChildren().addAll(
-                new Label("- Orden: #" + ordenSeleccionada.getNumero()),
-                new Label("- Estación: " + ordenSeleccionada.getEstacion()),
-                new Label("- Observación: " + observacion),
-                new Label("- Motivo: " + tipoMotivo),
-                new Label("- Comentario: " + (comentario.isEmpty() ? "Sin comentarios" : comentario))
-        );
+        resumenDetalles.getChildren().add(new Label("- Orden: #" + ordenSeleccionada.getNumero()));
+        resumenDetalles.getChildren().add(new Label("- Estación: " + ordenSeleccionada.getEstacion()));
+        resumenDetalles.getChildren().add(new Label("- Observación: " + observacion));
+        resumenDetalles.getChildren().add(new Label("- Motivos seleccionados:"));
+        for (String motivo : motivosSeleccionados) {
+            Label lblMotivo = new Label("  * " + motivo);
+            lblMotivo.setStyle("-fx-padding: 0 0 0 20;");
+            resumenDetalles.getChildren().add(lblMotivo);
+        }
 
         resumenContainer.setVisible(true);
     }
@@ -175,27 +195,26 @@ public class CerrarOrdenController {
     private void handleConfirmar(ActionEvent event) {
         System.out.println("Usuario confirmó el cierre de la orden");
 
-        RadioButton motivoSeleccionado = (RadioButton) motivoGroup.getSelectedToggle();
-        String tipoMotivo = obtenerTextoMotivo(motivoSeleccionado);
+        List<String> motivosSeleccionados = obtenerMotivosSeleccionados();
         String observacion = txtObservacion.getText().trim();
-        String comentario = txtComentario.getText().trim();
 
         // Simular el proceso de cierre
-        procesarCierreOrden(tipoMotivo, observacion, comentario);
+        procesarCierreOrden(motivosSeleccionados, observacion);
 
         // Mostrar diálogo de éxito
-        mostrarDialogoExito(tipoMotivo, observacion, comentario);
+        mostrarDialogoExito(motivosSeleccionados, observacion);
     }
 
-    private void procesarCierreOrden(String motivo, String observacion, String comentario) {
+    private void procesarCierreOrden(List<String> motivos, String observacion) {
         String numeroOrden = ordenSeleccionada.getNumero();
         String estacion = ordenSeleccionada.getEstacion();
 
         System.out.println("Orden #" + numeroOrden + " cerrada exitosamente");
-        System.out.println("Motivo: " + motivo);
+        System.out.println("Motivos (" + motivos.size() + "):");
+        for (String motivo : motivos) {
+            System.out.println("  - " + motivo);
+        }
         System.out.println("Observación: " + observacion);
-        System.out.println("Comentario: " + comentario);
-        System.out.println("Orden #" + numeroOrden + " cerrada exitosamente");
 
         // Actualizar estado del sismógrafo
         System.out.println("Actualizando estado del sismógrafo a Fuera de Servicio");
@@ -204,10 +223,13 @@ public class CerrarOrdenController {
         System.out.println("Sismógrafo de la estación " + estacion + " marcado como Fuera de Servicio");
 
         // Enviar notificaciones
-        enviarNotificaciones(numeroOrden, estacion, motivo, observacion, comentario);
+        enviarNotificaciones(numeroOrden, estacion, motivos, observacion);
+
+        // Eliminar la orden de la lista
+        OrdenListController.eliminarOrden(numeroOrden);
     }
 
-    private void enviarNotificaciones(String numeroOrden, String estacion, String motivo, String observacion, String comentario) {
+    private void enviarNotificaciones(String numeroOrden, String estacion, List<String> motivos, String observacion) {
         System.out.println("Preparando notificaciones de cierre de orden");
         System.out.println("Se encontraron 3 destinatarios para notificación");
         System.out.println("Enviando notificación por correo a: supervisor@empresa.com, mantenimiento@empresa.com, control.calidad@empresa.com");
@@ -215,9 +237,11 @@ public class CerrarOrdenController {
         System.out.println("Asunto: SISMÓGRAFO FUERA DE SERVICIO");
         System.out.println("Cuerpo del mensaje: SISMÓGRAFO FUERA DE SERVICIO");
         System.out.println("Estación: " + estacion);
-        System.out.println("Motivo: " + motivo);
+        System.out.println("Motivos (" + motivos.size() + "):");
+        for (String motivo : motivos) {
+            System.out.println("  - " + motivo);
+        }
         System.out.println("Observación: " + observacion);
-        System.out.println("Comentarios: " + comentario);
 
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -226,13 +250,13 @@ public class CerrarOrdenController {
         System.out.println("Publicando en monitor para estación: " + estacion);
     }
 
-    private void mostrarDialogoExito(String motivo, String observacion, String comentario) {
+    private void mostrarDialogoExito(List<String> motivos, String observacion) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/SuccessDialog.fxml"));
             Parent root = loader.load();
 
             SuccessDialogController controller = loader.getController();
-            controller.configurarMensaje(ordenSeleccionada, motivo, observacion, comentario);
+            controller.configurarMensajeMultiple(ordenSeleccionada, motivos, observacion, "");
 
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Operación Exitosa");
@@ -282,16 +306,6 @@ public class CerrarOrdenController {
         }
     }
 
-    private String obtenerTextoMotivo(RadioButton radioButton) {
-        if (radioButton == rbFallaHardware) return "Falla de hardware";
-        if (radioButton == rbFallaSoftware) return "Falla de software";
-        if (radioButton == rbMantenimientoPreventivo) return "Mantenimiento preventivo";
-        if (radioButton == rbCalibracionNecesaria) return "Calibración necesaria";
-        if (radioButton == rbDanoExterno) return "Daño por factores externos";
-        if (radioButton == rbInterferenciaElectromagnetica) return "Interferencia electromagnética";
-        if (radioButton == rbProblemasConectividad) return "Problemas de conectividad";
-        return "";
-    }
 
     private void mostrarError(String titulo, String mensaje) {
         Alert alert = new Alert(Alert.AlertType.ERROR);

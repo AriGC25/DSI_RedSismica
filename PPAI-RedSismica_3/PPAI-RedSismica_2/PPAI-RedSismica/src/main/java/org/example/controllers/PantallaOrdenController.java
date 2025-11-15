@@ -13,6 +13,8 @@ import org.example.Interfaz.InterfazEmail;
 import org.example.Interfaz.InterfazPantalla;
 import org.example.controlador.GestorOrden;
 import org.example.models.*;
+import org.example.util.DatabaseInitializer;
+import org.example.util.DataLoader;
 import org.example.util.OrdenInspeccionVisualDTO;
 
 import java.net.URL;
@@ -26,7 +28,6 @@ public abstract class PantallaOrdenController implements Initializable {
     @FXML protected Label lblVersion;
     @FXML protected Button btnCerrarOrden;
     @FXML protected Button btnSalir;
-    @FXML protected Button btnAgregarBloque;
 
     @FXML protected TableView<OrdenInspeccionVisualDTO> tableOrdenes;
     @FXML protected TableColumn<OrdenInspeccionVisualDTO, Integer> colNumero;
@@ -42,11 +43,11 @@ public abstract class PantallaOrdenController implements Initializable {
     @FXML protected Button btnCancelar;
     @FXML
     private VBox motivosContainer; // vinculado al VBox que agregaste en el FXML
-    private Map<MotivoTipo, Pair<CheckBox, TextField>> motivoCheckboxMap = new HashMap<>();
+    private final Map<MotivoTipo, Pair<CheckBox, TextField>> motivoCheckboxMap = new HashMap<>();
 
-    private Scanner scanner;
-    private ObservableList<OrdenInspeccionVisualDTO> ordenesData = FXCollections.observableArrayList();
-    private ObservableList<MotivoTipo> motivosData = FXCollections.observableArrayList();
+    private final Scanner scanner;
+    private final ObservableList<OrdenInspeccionVisualDTO> ordenesData = FXCollections.observableArrayList();
+    private final ObservableList<MotivoTipo> motivosData = FXCollections.observableArrayList();
     protected GestorOrden gestor;
     protected MotivoTipo motivoSeleccionado;
     protected String comentario;
@@ -54,13 +55,22 @@ public abstract class PantallaOrdenController implements Initializable {
 
     protected PantallaOrdenController() {
         this.scanner = new Scanner(System.in);
-        inicializarSistema();
+        // NO inicializar el sistema aquí, se hará en initialize()
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        System.out.println(">>> DEBUG PantallaOrdenController: initialize() iniciado");
 
+        // Inicializar el sistema PRIMERO, antes de configurar la interfaz
+        System.out.println(">>> DEBUG PantallaOrdenController: Llamando a inicializarSistema()...");
+        inicializarSistema();
+        System.out.println(">>> DEBUG PantallaOrdenController: inicializarSistema() completado. Gestor es: " + (gestor != null ? "NO NULL" : "NULL"));
+
+        System.out.println(">>> DEBUG PantallaOrdenController: Llamando a configurarInterfaz()...");
         configurarInterfaz();
+
+        System.out.println(">>> DEBUG PantallaOrdenController: Llamando a mostrarInformacionSistema()...");
         mostrarInformacionSistema();
 
         if (panelCierre != null) {
@@ -81,9 +91,11 @@ public abstract class PantallaOrdenController implements Initializable {
         if (txtComentarios != null) txtComentarios.setDisable(true);
         if (btnConfirmarCierre != null) btnConfirmarCierre.setDisable(true);
 
-        txtObservacion.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            tomarObservacion(txtObservacion.getText().trim());
-        });
+        if (txtObservacion != null) {
+            txtObservacion.focusedProperty().addListener((obs, oldVal, newVal) ->
+                    tomarObservacion(txtObservacion.getText().trim())
+            );
+        }
 
         generarMotivosContainer();
     }
@@ -115,53 +127,68 @@ public abstract class PantallaOrdenController implements Initializable {
     }
 
     private void inicializarSistema() {
+        try {
+            System.out.println(">>> DEBUG: Iniciando inicializarSistema()");
 
-        //Rol
-        Rol rolResponsable = new Rol("Responsable de Inspecciones", "Encargado de gestionar inspecciones");
-        Rol rolTecnico = new Rol("Técnico", "Técnico de campo");
+            // Inicializar la base de datos con datos de prueba si está vacía
+            System.out.println(">>> DEBUG: Llamando a DatabaseInitializer.initializeData()");
+            DatabaseInitializer.initializeData();
+            System.out.println(">>> DEBUG: DatabaseInitializer completado");
 
-        //Empleado
-        Empleado empleado = new Empleado("Juan Pérez", "juanperez@email.com");
-        empleado.setRol(rolResponsable);
-        Empleado empleado2 = new Empleado("María García", "maria.garcia@empresa.com");
-        empleado2.setRol(rolTecnico);
-        List<Empleado> empleados = List.of(empleado, empleado2);
+            // Cargar datos desde la base de datos
+            System.out.println(">>> DEBUG: Cargando datos desde la base de datos...");
+            List<Empleado> empleados = DataLoader.cargarEmpleados();
+            System.out.println(">>> DEBUG: Empleados cargados: " + empleados.size());
 
-        //Usuario logeado
-        Usuario usuario = new Usuario("admin", "admin123", empleado);
+            List<Estado> estados = DataLoader.cargarEstados();
+            System.out.println(">>> DEBUG: Estados cargados: " + estados.size());
 
-        //Sesión actual
-        Sesion sesion = new Sesion("2025-01-01 8:00", "2025-01-01 17:00", usuario);
+            List<OrdenInspeccion> ordenes = DataLoader.cargarOrdenes();
+            System.out.println(">>> DEBUG: Órdenes cargadas: " + ordenes.size());
 
-        //Estación sismológica
-        EstacionSismologica est1 = new EstacionSismologica(101, "01CD", "2020-02-01", "-34.6118", "-58.3960", "Estación Central", 21458);
-        Sismografo sismo1 = new Sismografo(101, "2020-10-21", 2000);
-        est1.setSismografo(sismo1);
-        EstacionSismologica est2 = new EstacionSismologica(101, "01CD", "2020-05-10", "35.6118", "-55.3960", "Estación Norte", 15874);
-        Sismografo sismo2 = new Sismografo(102, "2021-08-20", 2001);
-        est2.setSismografo(sismo2);
-        EstacionSismologica est3 = new EstacionSismologica(101, "01CD", "2018-06-10", "33.6118", "-58.3960", "Estación Sur", 78541);
-        Sismografo sismo3 = new Sismografo(103, "2023-01-10", 2010);
-        est3.setSismografo(sismo3);
+            Sesion sesion = DataLoader.cargarSesionActual();
+            System.out.println(">>> DEBUG: Sesión cargada: " + (sesion != null ? "OK" : "NULL"));
 
-        //Estado
-        Estado estado = Estado.REALIZADA;
-        List<Estado> estados = Estado.obtenerEstados();
+            System.out.println(">>> DEBUG: Datos cargados - Empleados: " + empleados.size() + ", Órdenes: " + ordenes.size() + ", Sesión: " + (sesion != null ? "OK" : "NULL"));
 
-        //Ordenes
-        OrdenInspeccion orden1 = new OrdenInspeccion(1, "2025-01-01 10:00", "2025-01-01 11:00", "2025-01-01", "Observacion ciere 1", est1, empleado,estado);
-        OrdenInspeccion orden2 = new OrdenInspeccion(2, "2025-01-01 10:00", "2025-02-01 14:00", "2025-01-01", "Observacion ciere 2", est2, empleado, estado);
-        OrdenInspeccion orden3 = new OrdenInspeccion(3, "2025-01-01 10:00", "2025-05-01 10:00", "2025-01-01", "Observacion ciere 3", est3, empleado, estado);
-        List<OrdenInspeccion> ordenes = List.of(orden1, orden2, orden3);
+            // Validar que se hayan cargado los datos necesarios
+            if (sesion == null) {
+                System.err.println(">>> ERROR: No se pudo cargar la sesión desde la base de datos.");
+                return;
+            }
 
-        //Interfaz email
-        InterfazEmail interfazEmail = new InterfazEmail("");
+            if (empleados.isEmpty()) {
+                System.err.println(">>> ERROR: No se pudieron cargar empleados desde la base de datos.");
+                return;
+            }
 
-        //Interfaz pantalla
-        InterfazPantalla interfazPantalla = new InterfazPantalla("");
+            if (ordenes.isEmpty()) {
+                System.err.println(">>> ERROR: No se pudieron cargar órdenes desde la base de datos.");
+                return;
+            }
 
-        //Gestor
-        gestor = new GestorOrden(sesion, ordenes, estados, empleados, interfazEmail, interfazPantalla);
+            // Crear interfaces
+            System.out.println(">>> DEBUG: Creando interfaces...");
+            InterfazEmail interfazEmail = new InterfazEmail();
+            InterfazPantalla interfazPantalla = new InterfazPantalla();
+            System.out.println(">>> DEBUG: Interfaces creadas");
+
+            System.out.println(">>> DEBUG: Creando GestorOrden...");
+
+            // Crear gestor con datos de la base de datos
+            gestor = new GestorOrden(sesion, ordenes, estados, empleados, interfazEmail, interfazPantalla);
+
+            System.out.println(">>> DEBUG: GestorOrden creado - gestor es: " + (gestor != null ? "NO NULL" : "NULL"));
+            System.out.println(">>> Sistema inicializado con datos desde la base de datos.");
+            System.out.println(">>> Sesión: " + sesion.obtenerUsuario().getUsuario());
+            System.out.println(">>> Empleados cargados: " + empleados.size());
+            System.out.println(">>> Órdenes cargadas: " + ordenes.size());
+
+        } catch (Exception e) {
+            System.err.println(">>> ERROR CRÍTICO en inicializarSistema(): " + e.getMessage());
+            e.printStackTrace();
+            gestor = null;
+        }
     }
 
     private void mostrarInformacionSistema() {
@@ -182,14 +209,17 @@ public abstract class PantallaOrdenController implements Initializable {
     private void configurarInterfaz() {
         tableOrdenes.setItems(ordenesData);
         colNumero.setCellValueFactory(new PropertyValueFactory<>("numeroDeOrden"));
-        colEstado.setCellValueFactory(new PropertyValueFactory<>("EstadoActual"));
         colFecha.setCellValueFactory(new PropertyValueFactory<>("fechaGeneracion"));
+        colEstado.setCellValueFactory(new PropertyValueFactory<>("estadoActual"));
         colIdentificador.setCellValueFactory(new PropertyValueFactory<>("identificador"));
     }
 
     @FXML
     private void onCerrarOrdenClick() {
         System.out.println("boton apretado");
+        // Primero limpiar la tabla de órdenes anteriores
+        ordenesData.clear();
+        // Luego ejecutar la operación que cargará las nuevas órdenes
         opsCerrarOrden();
     }
 
@@ -243,7 +273,6 @@ public abstract class PantallaOrdenController implements Initializable {
 
         int numeroOrden = Integer.parseInt(txtNumeroOrden.getText().trim());
         String observacion = txtObservacion.getText().trim();
-
 
         tomarNumeroOrden(numeroOrden);
         tomarObservacion(observacion);
@@ -300,9 +329,19 @@ public abstract class PantallaOrdenController implements Initializable {
         boolean confirmado = resultado.isPresent() && resultado.get() == ButtonType.OK;
 
         if (confirmado) {
-            mostrarExito("Orden cerrada", "La orden #" + nroOrden + " ha sido cerrada exitosamente.");
-            ocultarPanelCierre();
+            // Primero ejecutar el cierre
             tomarConfirmacion();
+
+            // Actualizar la tabla eliminando la orden cerrada
+            ordenesData.removeIf(orden -> orden.numeroDeOrden() == nroOrden);
+
+            // Ocultar el panel de cierre
+            ocultarPanelCierre();
+
+            // El mensaje de éxito lo mostrará InterfazPantalla a través del patrón Observer
+            // Ya no lo mostramos aquí para evitar duplicados
+            //limpiar pantalla
+            this.tableOrdenes.getItems().clear();
 
         } else {
             mostrarInformacion("Operación cancelada", "El cierre de la orden ha sido cancelado.");

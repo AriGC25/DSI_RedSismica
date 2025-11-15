@@ -6,8 +6,12 @@
     <properties>
         <java.version>21</java.version>
         <javafx.version>21</javafx.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <hibernate.version>6.3.1.Final</hibernate.version>
     </properties>
+
     <dependencies>
+        <!-- JavaFX -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -28,7 +32,29 @@
             <artifactId>javafx-graphics</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+
+        <!-- Hibernate ORM -->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>${hibernate.version}</version>
+        </dependency>
+
+        <!-- H2 Database -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.2.224</version>
+        </dependency>
+
+        <!-- Jakarta Persistence API -->
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <version>3.1.0</version>
+        </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <!--  Plugin para compilar correctamente con Java 21  -->
@@ -40,6 +66,7 @@
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <release>${java.version}</release>
+                    <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
             <!--  Plugin para ejecutar JavaFX con Maven  -->
@@ -51,6 +78,24 @@
                     <mainClass>org.example.Main</mainClass>
                 </configuration>
             </plugin>
+
+            <!-- Exec plugin para ejecutar Main pasando (module-path) vía -Dfxlib -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>org.example.Main</mainClass>
+                    <classpathScope>runtime</classpathScope>
+                    <!--<jvmArgs>-->
+                    <!--    <jvmArg>-module-path</jvmArg>-->
+                    <!--    <jvmArg>${fxlib}</jvmArg>-->
+                    <!--    <jvmArg>-add-modules</jvmArg>-->
+                    <!--    <jvmArg>javafx.controls,javafx.fxml</jvmArg>-->
+                    <!--</jvmArgs>-->
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 </project>

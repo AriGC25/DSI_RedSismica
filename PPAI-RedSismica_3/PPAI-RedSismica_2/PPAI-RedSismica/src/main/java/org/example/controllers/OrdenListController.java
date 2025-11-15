@@ -31,6 +31,9 @@ public class OrdenListController {
     @FXML
     private Button btnVolver;
 
+    // Lista estática para mantener las órdenes entre navegaciones
+    private static List<OrdenInspeccion> ordenesEstaticas;
+
     private List<OrdenInspeccion> ordenes;
 
     @FXML
@@ -52,24 +55,42 @@ public class OrdenListController {
     }
 
     private void cargarOrdenes() {
-        ordenes = new ArrayList<>();
+        // Si es la primera vez, inicializar la lista estática
+        if (ordenesEstaticas == null) {
+            ordenesEstaticas = new ArrayList<>();
 
-        // Datos precargados según el flujo
-        ordenes.add(new OrdenInspeccion("1001", "2025-05-15", "Mantenimiento preventivo",
-                "Estación Central", "Finalizada", "Juan Pérez"));
-        ordenes.add(new OrdenInspeccion("1002", "2025-05-16", "Inspección rutinaria",
-                "Estación Norte", "Finalizada", "Juan Pérez"));
-        ordenes.add(new OrdenInspeccion("1003", "2025-05-17", "Verificación de sensores",
-                "Estación Sur", "Finalizada", "Juan Pérez"));
+            // Datos precargados según el flujo
+            //ordenesEstaticas.add(new OrdenInspeccion("1001", "2025-05-15", "Mantenimiento preventivo",
+                //    "Estación Central", "Finalizada", "Juan Pérez"));
+            //ordenesEstaticas.add(new OrdenInspeccion("1002", "2025-05-16", "Inspección rutinaria",
+              //      "Estación Norte", "Finalizada", "Juan Pérez"));
+            //ordenesEstaticas.add(new OrdenInspeccion("1003", "2025-05-17", "Verificación de sensores",
+              //      "Estación Sur", "Finalizada", "Juan Pérez"));
 
-        // Marcar órdenes como finalizadas
-        System.out.println("Orden #1001 marcada como finalizada");
-        System.out.println("Orden #1002 marcada como finalizada");
-        System.out.println("Orden #1003 marcada como finalizada");
+            // Marcar órdenes como finalizadas
+            System.out.println("Orden #1001 marcada como finalizada");
+            System.out.println("Orden #1002 marcada como finalizada");
+            System.out.println("Orden #1003 marcada como finalizada");
+        }
+
+        // Usar la lista estática
+        ordenes = ordenesEstaticas;
     }
 
     private void mostrarOrdenes() {
         ordenesContainer.getChildren().clear();
+
+        if (ordenes.isEmpty()) {
+            // Mostrar mensaje cuando no hay órdenes
+            Label lblSinOrdenes = new Label("No hay órdenes de inspección finalizadas pendientes de cierre");
+            lblSinOrdenes.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d; -fx-padding: 20;");
+            ordenesContainer.getChildren().add(lblSinOrdenes);
+
+            System.out.println(">>> PANTALLA: ================================");
+            System.out.println(">>> PANTALLA: No hay órdenes de inspección disponibles");
+            System.out.println(">>> PANTALLA: ================================");
+            return;
+        }
 
         for (OrdenInspeccion orden : ordenes) {
             VBox ordenCard = crearTarjetaOrden(orden);
@@ -215,6 +236,16 @@ public class OrdenListController {
         alert.showAndWait();
     }
 
+    /**
+     * Método público estático para eliminar una orden de la lista
+     */
+    public static void eliminarOrden(String numeroOrden) {
+        if (ordenesEstaticas != null) {
+            ordenesEstaticas.removeIf(orden -> orden.getNumero().equals(numeroOrden));
+            System.out.println("Orden #" + numeroOrden + " eliminada de la lista de órdenes pendientes");
+        }
+    }
+
     // Clase interna para representar una orden de inspección
     public static class OrdenInspeccion {
         private String numero;
@@ -243,3 +274,4 @@ public class OrdenListController {
         public String getResponsable() { return responsable; }
     }
 }
+

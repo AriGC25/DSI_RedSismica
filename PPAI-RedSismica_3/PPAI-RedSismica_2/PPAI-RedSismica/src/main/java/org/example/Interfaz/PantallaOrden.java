@@ -3,15 +3,30 @@ package org.example.Interfaz;
 import org.example.controllers.PantallaOrdenController;
 import org.example.models.MotivoTipo;
 
+import java.net.URL;
 import java.util.List;
-import java.util.Map;
+import java.util.ResourceBundle;
 
 //CLASE BOUNDARY
 public class PantallaOrden extends PantallaOrdenController {
 
+    private String observacion;
+
     public PantallaOrden() {
         super();
-        this.gestor.setPantalla(this);
+    }
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        //Primero llamamos al initialize del padre para inicializar el sistema
+        super.initialize(location, resources);
+
+        // Configuramos la en el gestor
+        if (this.gestor != null) {
+            this.gestor.setPantalla(this);
+        } else {
+            System.err.println(">>> ERROR PantallaOrden: El gestor es NULL después de super.initialize()!");
+        }
     }
 
     @Override
@@ -20,6 +35,10 @@ public class PantallaOrden extends PantallaOrdenController {
     }
 
     private void habilitar() {
+        if (gestor == null) {
+            System.err.println(">>> ERROR CRÍTICO: gestor es NULL en habilitar()!");
+            return;
+        }
         gestor.tomarOpcCerrarOrd();
     }
 
@@ -36,6 +55,11 @@ public class PantallaOrden extends PantallaOrdenController {
     @Override
     public void tomarNumeroOrden(int numeroOrden) {
         gestor.tomarOrdenPorNumero(numeroOrden);
+        pedirObservacion(observacion);
+    }
+
+    public void pedirObservacion(String observacion) {
+        tomarObservacion(observacion);
     }
 
     @Override
@@ -66,9 +90,6 @@ public class PantallaOrden extends PantallaOrdenController {
     @Override
     protected void tomarConfirmacion() {
         gestor.tomarConfirmacion();
-
-        //metodo javar fx
-        limpiarPantalla();
     }
 
     public void mostrarMensajeError(String titulo, String mensaje) {

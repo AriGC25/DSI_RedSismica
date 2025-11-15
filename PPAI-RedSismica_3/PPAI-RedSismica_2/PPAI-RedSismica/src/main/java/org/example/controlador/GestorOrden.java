@@ -5,14 +5,20 @@ import org.example.Interfaz.InterfazPantalla;
 import org.example.Interfaz.PantallaOrden;
 import org.example.models.*;
 
-import java.security.spec.RSAOtherPrimeInfo;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import org.example.Interfaz.IObservador;
+
+import org.example.Interfaz.ISujeto;
+import org.example.util.HibernateUtil;
+
+import java.util.ArrayList;
+import java.util.List;
+
 
 //CLASE GESTOR
-public class GestorOrden {
+public class GestorOrden implements ISujeto {
     private PantallaOrden pantalla;
     private Sesion sesion;
     private OrdenInspeccion ordenSeleccionada;
@@ -28,6 +34,12 @@ public class GestorOrden {
     private InterfazEmail interfazEmail;
     private InterfazPantalla interfazPantalla;
     private List<String> emailsResponsables;
+    private List<IObservador> observadores;
+    private String datosNotificacion_identificadorSismografo;
+    private String datosNotificacion_nuevoEstado;
+    private String datosNotificacion_fechaHora;
+    private List<String> datosNotificacion_motivos;
+    private String datosNotificacion_comentarios;
 
     public GestorOrden(Sesion sesion, List<OrdenInspeccion> ordenesInspeccion, List<Estado> estados, List<Empleado> empleados, InterfazEmail interfazEmail, InterfazPantalla interfazPantalla) {
         this.sesion = sesion;
@@ -36,6 +48,7 @@ public class GestorOrden {
         this.empleados = empleados;
         this.interfazEmail = interfazEmail;
         this.interfazPantalla = interfazPantalla;
+        this.observadores = new ArrayList<>();
     }
 
     //Métodos GET y SET
@@ -151,6 +164,33 @@ public class GestorOrden {
         this.emailsResponsables = emailsResponsables;
     }
 
+    // --- Métodos del patrón Observer ---
+    @Override
+    public void suscribir(IObservador observador) {
+        if (!observadores.contains(observador)) {
+            observadores.add(observador);
+        }
+    }
+
+    @Override
+    public void quitar(IObservador observador) {
+        observadores.remove(observador);
+    }
+
+    @Override
+    public void notificar() {
+        for (IObservador observador : observadores) {
+            observador.actualizar(
+                    datosNotificacion_identificadorSismografo,
+                    datosNotificacion_nuevoEstado,
+                    datosNotificacion_fechaHora,
+                    datosNotificacion_motivos,
+                    datosNotificacion_comentarios,
+                    emailsResponsables
+            );
+        }
+    }
+
     //Otros métodos del Gestor
     public void tomarOpcCerrarOrd() {
         empleadoLogueado = buscarEmpleadoRI();
@@ -165,6 +205,7 @@ public class GestorOrden {
     private void buscarOrdInspeccion() {
         List<OrdenInspeccion> ordenesFiltradas = new ArrayList<>();
         for (OrdenInspeccion orden : ordenesInspeccion) {
+
             if (orden.esDeEmpleado(empleadoLogueado) && orden.esRealizada()) {
                 ordenesFiltradas.add(orden);
             }
@@ -175,6 +216,7 @@ public class GestorOrden {
             var fechaFin = orden.getFechaHoraFinalizacion();
             var nombreEstacion = orden.getNombreEstacion();
             int identificador = orden.getIndentificador();
+            //ordenarOI ver de agregar
             pantalla.mostrarDatosOrden(numero, fechaFin, nombreEstacion, identificador);
         }
     }
@@ -219,22 +261,23 @@ public class GestorOrden {
     public void validarObservacionYMotivo(){
         boolean valido = ordenSeleccionada.validarObservacionYMotivos(observacionCierre, motivoSeleccionado);
 
+        // Si no es válido, mostrar error y salir
+        if (!valido) {
+            pantalla.mostrarMensajeError("Error en validación", "La observación o el motivo seleccionado no son válidos.");
+            return;
+        }
+
         EstacionSismologica estacion = buscarEstacionFS();
 
-        Estado estadoFueraServico = null;
+        Estado estadoFueraServicio = null;
         for (Estado estado: estados) {
             if (estado.esAmbitoSismografo() && estado.esFueraDeServicio()) {
-                estadoFueraServico = estado;
+                estadoFueraServicio = estado;
                 break;
             }
         }
 
-        buscarEstadoCerrada();
-
-        boolean estaCerrada = ordenSeleccionada.estaCerrada();
-        if (!valido || estaCerrada) {
-            pantalla.mostrarMensajeError("La observación o el motivo seleccionado no son válidos.","Por favor, verifique los datos ingresados.");
-        }
+        Estado estadoCerrada = buscarEstadoCerrada();
 
         String horaActual = obtenerHoraActual();
         String fechaActual = obtenerFechaActual();
@@ -242,11 +285,20 @@ public class GestorOrden {
         cerrarOrden(horaActual, fechaActual);
         enviarAReparar(empleadoLogueado, motivoSeleccionado, comentarioIngresado, horaActual, fechaActual);
 
-        if(valido){
-            List<String> emailsResponsables = obtenerEmailsResponsables();
-            enviarNotificacionesEmail(emailsResponsables);
-            publicarMonitor(estacion.getNombre());
-        }
+        // Obtener emails de responsables antes de preparar datos y notificar
+        this.emailsResponsables = obtenerEmailsResponsables();
+
+        this.observadores = new ArrayList<>();
+
+        // El gestor crea los observadores
+        IObservador notificadorEmail = new InterfazEmail();
+        IObservador notificadorPantalla = new InterfazPantalla();
+
+        this.suscribir(notificadorEmail);
+        this.suscribir(notificadorPantalla);
+
+        // Preparar datos y notificar
+        this.enviarNotificaciones(fechaActual, horaActual, estadoCerrada);
 
         finCasoDeUso();
     }
@@ -255,7 +307,7 @@ public class GestorOrden {
         return ordenSeleccionada.getEstacion();
     }
 
-    private void buscarEstadoCerrada() {
+    private Estado buscarEstadoCerrada() {
         Estado estadoCerrada = null;
         for (Estado estado: estados) {
             if (estado.esAmbitoOrden() && estado.esCerrada()) {
@@ -263,6 +315,7 @@ public class GestorOrden {
                 break;
             }
         }
+        return estadoCerrada;
     }
 
     private String obtenerHoraActual() {
@@ -277,6 +330,9 @@ public class GestorOrden {
 
     private void cerrarOrden(String horaActual, String fechaActual) {
         ordenSeleccionada.cerrar(observacionCierre, motivoSeleccionado, comentarioIngresado, horaActual, fechaActual);
+        //Persistimos el cierre
+        HibernateUtil.saveOrUpdate(ordenSeleccionada);
+
     }
 
     private void enviarAReparar(Empleado responsableInspeccion, List<MotivoTipo> motivoSeleccionado, List<String> comentarioIngresado, String horaActual, String fechaActual) {
@@ -296,13 +352,31 @@ public class GestorOrden {
         return emails;
     }
 
-    private void enviarNotificacionesEmail(List<String> emails) {
-        interfazEmail.enviarEmail(emails);
+    private void enviarNotificaciones(String fechaActual, String horaActual, Estado estadoCerrada) {
+        // 1. Recopila los datos necesarios para la notificación desde las variables reales
+        int identificadorSismografo = ordenSeleccionada.getEstacion().getIdentificador();
+        this.datosNotificacion_identificadorSismografo = String.valueOf(identificadorSismografo);
+        this.datosNotificacion_nuevoEstado = estadoCerrada != null ? estadoCerrada.getNombre() : "CERRADA";
+        this.datosNotificacion_fechaHora = fechaActual + " " + horaActual;
+
+        // Convertir todos los MotivoTipo a sus descripciones (String)
+        this.datosNotificacion_motivos = new ArrayList<>();
+        if (motivoSeleccionado != null && !motivoSeleccionado.isEmpty()) {
+            for (MotivoTipo motivo : motivoSeleccionado) {
+                this.datosNotificacion_motivos.add(motivo.getDescripcion());
+            }
+        }
+
+        // Concatenar todos los comentarios si hay múltiples
+        this.datosNotificacion_comentarios = "";
+        if (comentarioIngresado != null && !comentarioIngresado.isEmpty()) {
+            this.datosNotificacion_comentarios = String.join("; ", comentarioIngresado);
+        }
+
+        // 2. Llama al metodo para notificar a todos los suscriptores
+        this.notificar();
     }
 
-    private void publicarMonitor(String nombreEstacion) {
-        interfazPantalla.publicar(nombreEstacion);
-    }
 
     private void finCasoDeUso() {
         System.out.println("----------- FIN DE CASO DE USO --------------");

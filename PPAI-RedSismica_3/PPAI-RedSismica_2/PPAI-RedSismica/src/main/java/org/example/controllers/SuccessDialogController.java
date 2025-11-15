@@ -14,6 +14,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.List;
 
 public class SuccessDialogController {
 
@@ -66,6 +67,50 @@ public class SuccessDialogController {
         detallesOperacion.getChildren().forEach(node -> {
             if (node instanceof Label) {
                 ((Label) node).setStyle("-fx-font-size: 12px; -fx-text-fill: #2c3e50;");
+            }
+        });
+    }
+
+    public void configurarMensajeMultiple(OrdenInspeccion orden, List<String> motivos, String observacion, String comentario) {
+        this.ordenProcesada = orden;
+
+        String mensaje = "La orden #" + orden.getNumero() + " ha sido cerrada exitosamente";
+        lblMensajeExito.setText(mensaje);
+
+        System.out.println(">>> PANTALLA: " + mensaje);
+        System.out.println(">>> PANTALLA: ================================");
+
+        // Agregar detalles de la operación
+        detallesOperacion.getChildren().clear();
+        detallesOperacion.getChildren().add(new Label("Orden: #" + orden.getNumero()));
+        detallesOperacion.getChildren().add(new Label("Estación: " + orden.getEstacion()));
+
+        // Agregar motivos (uno o múltiples)
+        if (motivos.size() == 1) {
+            detallesOperacion.getChildren().add(new Label("Motivo: " + motivos.get(0)));
+        } else {
+            detallesOperacion.getChildren().add(new Label("Motivos (" + motivos.size() + "):"));
+            for (String motivo : motivos) {
+                Label lblMotivo = new Label("  • " + motivo);
+                lblMotivo.setStyle("-fx-padding: 0 0 0 15;");
+                detallesOperacion.getChildren().add(lblMotivo);
+            }
+        }
+
+        detallesOperacion.getChildren().add(new Label("Observación: " + observacion));
+        detallesOperacion.getChildren().add(new Label("Comentario: " + (comentario.isEmpty() ? "Sin comentarios" : comentario)));
+        detallesOperacion.getChildren().add(new Label("Estado del Sismógrafo: Fuera de Servicio"));
+        detallesOperacion.getChildren().add(new Label("Notificaciones: Enviadas por correo electrónico"));
+
+        // Aplicar estilos a los labels
+        detallesOperacion.getChildren().forEach(node -> {
+            if (node instanceof Label) {
+                Label label = (Label) node;
+                if (!label.getStyle().contains("-fx-padding")) {
+                    label.setStyle("-fx-font-size: 12px; -fx-text-fill: #2c3e50;");
+                } else {
+                    label.setStyle(label.getStyle() + "; -fx-font-size: 12px; -fx-text-fill: #2c3e50;");
+                }
             }
         });
     }

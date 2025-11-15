@@ -2,7 +2,7 @@ package org.example.util;
 
 public record OrdenInspeccionVisualDTO(
         int numeroDeOrden,
-        String EstadoActual,
+        String estadoActual,
         String fechaGeneracion,
         int identificador
 ) {
@@ -12,12 +12,13 @@ public record OrdenInspeccionVisualDTO(
     }
 
     public String getEstadoActual() {
-        return EstadoActual;
+        return estadoActual;
     }
 
     public String getFechaGeneracion() {
         return fechaGeneracion;
     }
+
     public int getIdentificador() {
         return identificador;
     }
